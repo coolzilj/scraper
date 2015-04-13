@@ -1,0 +1,8 @@
+{
+  "name": "scraper",
+  "description": "my scraper",
+  "version": "0.0.1",
+  "dependencies": {
+    "x-ray": "^1.0.5"
+  }
+}
