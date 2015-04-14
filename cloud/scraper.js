@@ -1,6 +1,7 @@
 var xray = require('x-ray');
+var async = require('async');
 
-function run () {
+function run (callback) {
   xray('http://github.com/stars/coolzilj')
     .select([{
       $root: '.repo-list-item',
@@ -13,51 +14,55 @@ function run () {
       }
     }])
     .paginate('.pagination a:last-child[href]')
-    // .limit(10)
+    // .limit(3)
     .run(function(err, repos) {
-      var Repo = AV.Object.extend("repo");
-
       if (err) {
-        console.log("===== something wrong =====");
+        console.log("===== Error when scraping =====");
       } else {
         if (repos.length > 0) {
-          for (var i = repos.length - 1; i >= 0; i--) {
-            var obj = repos[i];
-            var query = new AV.Query(Repo);
-            query.equalTo("link", obj["link"]);
-            (function(obj) {
-              query.first({
-                success: function(result) {
-                  if(!result) {
-                    var repo = new Repo();
-                    repo.save({
-                      title: obj["title"],
-                      link: obj["link"],
-                      description: obj["description"],
-                      meta: {
-                        starredOn: obj["meta"]["starredOn"]
-                      }
-                    }, {
-                      success: function(repo) {
-                        console.log(repo.get("link") + " saved.");
-                      },
-                      error: function(repo, err) {
-                        console.log(err.message);
-                      }
-                    });
-                  } else {
-                    console.log(result.get("link") + " existed");
-                  }
-                },
-                error: function(err) {
-                  console.log("Something wrong when query: " + err.message);
-                }
-              });
-            })(obj)
-          };
+          async.each(repos, saveRepo, function(err){
+            if(!err) {
+              callback(null);
+            } else {
+              callback(err);
+              console.log("===== Error when saving repo =====");
+            }
+          })
         }
       }
-    })
+    });
+}
+
+function saveRepo (data, callback) {
+  var Repo = AV.Object.extend("repo");
+  var query = new AV.Query(Repo);
+
+  query.equalTo("link", data["link"]);
+  query.first().then(function(result) {
+    if (!result) {
+      var repo = new Repo();
+      repo.save({
+        title: data["title"],
+        link: data["link"],
+        description: data["description"],
+        meta: {
+          starredOn: data["meta"]["starredOn"]
+        }
+      }).then(function(repo) {
+        console.log(repo.get("link") + " saved.");
+        callback(null);
+      }, function(repo, err) {
+        console.log(err.message);
+        callback(err);
+      });
+    } else {
+      console.log(result.get("link") + " existed");
+      callback(null);
+    };
+  }, function(err) {
+    console.log("Something wrong when query: " + err.message);
+    callback(err);
+  });
 }
 
 module.exports = {
