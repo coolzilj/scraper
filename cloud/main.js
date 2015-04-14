@@ -8,8 +8,8 @@ AV.Cloud.define("scrape", function(request, response) {
       console.log("====== scrape end successfully ======");
       response.success();
     } else {
-      console.log("====== scrape end unfortunately ======");
-      response.error();
+      console.error("====== scrape end unfortunately ======");
+      response.error("====== scrape end unfortunately ======");
     }
   });
 });

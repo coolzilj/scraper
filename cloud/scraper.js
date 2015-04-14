@@ -17,7 +17,7 @@ function run (callback) {
     // .limit(3)
     .run(function(err, repos) {
       if (err) {
-        console.log("===== Error when scraping =====");
+        console.error("===== Error when scraping =====");
       } else {
         if (repos.length > 0) {
           async.each(repos, saveRepo, function(err){
@@ -25,7 +25,7 @@ function run (callback) {
               callback(null);
             } else {
               callback(err);
-              console.log("===== Error when saving repo =====");
+              console.error("===== Error when saving repo =====");
             }
           })
         }
@@ -52,7 +52,7 @@ function saveRepo (data, callback) {
         console.log(repo.get("link") + " saved.");
         callback(null);
       }, function(repo, err) {
-        console.log(err.message);
+        console.error(err.message);
         callback(err);
       });
     } else {
@@ -60,7 +60,7 @@ function saveRepo (data, callback) {
       callback(null);
     };
   }, function(err) {
-    console.log("Something wrong when query: " + err.message);
+    console.error("Something wrong when query");
     callback(err);
   });
 }
